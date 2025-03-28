@@ -1,0 +1,16 @@
+{% extends 'echo/base.html' %}
+
+{% block title %}{{ book.title }}{% endblock %}
+
+{% block content %}
+    <h1>{{ book.title }}</h1>
+    <p>Author: {{ book.author }}</p>
+    <p>Price: ${{ book.price }}</p>
+    
+    {% if user.is_authenticated and user.role == 'admin' %}
+        <a href="{% url 'book_edit' book.pk %}">Edit</a>
+        <a href="{% url 'book_delete' book.pk %}">Delete</a>
+    {% endif %}
+    
+    <a href="{% url 'book_list' %}">Back to list</a>
+{% endblock %}
