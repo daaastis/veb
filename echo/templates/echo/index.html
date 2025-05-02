@@ -1,0 +1,20 @@
+{% extends 'echo/base.html' %}
+
+{% block content %}
+<h1>Список товаров</h1>
+<div class="products">
+    {% for product in products %}
+        <div class="product">
+            <h3>{{ product.name }}</h3>
+            <p>Цена: {{ product.price }} ₽</p>
+
+
+            <!-- Кнопка "Добавить в корзину" -->
+            <form action="{% url 'add_to_cart' product.id %}" method="post">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary">Добавить в корзину</button>
+            </form>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

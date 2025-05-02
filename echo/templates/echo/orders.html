@@ -1,0 +1,14 @@
+{% extends 'echo/base.html' %}
+
+{% block content %}
+<h1>Мои заказы</h1>
+{% for order in orders %}
+    <div style="margin-bottom: 20px;">
+        <h3>Заказ #{{ order.id }} — {{ order.created_at }}</h3>
+
+        <strong>Итого: {{ order.total }} $</strong>
+    </div>
+{% empty %}
+    <p>У вас пока нет заказов.</p>
+{% endfor %}
+{% endblock %}
