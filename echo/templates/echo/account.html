@@ -1,0 +1,17 @@
+{% extends 'echo/base.html' %}
+
+{% block content %}
+<h1>Личный кабинет</h1>
+<form method="post">
+    {% csrf_token %}
+       <label>Логин: <input type="text" name="login" value="{{ user.username }}"></label><br>
+    <label>Почта: <input type="text" name="email" value="{{ user.email }}"></label><br>
+    <label>Имя: <input type="text" name="first_name" value="{{ user.first_name }}"></label><br>
+    <label>Фамилия: <input type="text" name="last_name" value="{{ user.last_name }}"></label><br>
+    <button type="submit">Сохранить</button>
+</form>
+{% endblock %}
+
+
+
+
