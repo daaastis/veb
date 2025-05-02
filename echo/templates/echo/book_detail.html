@@ -1,16 +1,74 @@
 {% extends 'echo/base.html' %}
 
-{% block title %}{{ book.title }}{% endblock %}
-
 {% block content %}
-    <h1>{{ book.title }}</h1>
-    <p>Author: {{ book.author }}</p>
-    <p>Price: ${{ book.price }}</p>
-    
-    {% if user.is_authenticated and user.role == 'admin' %}
-        <a href="{% url 'book_edit' book.pk %}">Edit</a>
-        <a href="{% url 'book_delete' book.pk %}">Delete</a>
+<div class="book-detail-container">
+    <h1 class="book-title">{{ book.title }}</h1>
+    <p class="book-author">Автор: {{ book.author }}</p>
+    <p class="book-price">Цена: {{ book.price }} $</p>
+
+    {% if book.description %}
+    <div class="book-description">
+        <h3>Описание:</h3>
+        <p>{{ book.description }}</p>
+    </div>
     {% endif %}
-    
-    <a href="{% url 'book_list' %}">Back to list</a>
+
+    {% if book and book.id %}
+    <form action="{% url 'add_to_cart' book.id %}" method="post" class="add-to-cart-form">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-primary" aria-label="Добавить в корзину книгу {{ book.title|default:'' }}">
+            Добавить в корзину
+        </button>
+    </form>
+{% endif %}
+
+
+    <!-- Кнопки для админа -->
+    <div class="admin-actions mt-4">
+        {% if user.is_superuser %}
+            <a href="{% url 'book_edit' pk=book.pk %}" class="btn btn-warning">
+                <i class="fas fa-edit"></i> Редактировать
+            </a>
+            <form action="{% url 'book_delete' pk=book.pk %}" method="post" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger" onclick="return confirm('Вы уверены, что хотите удалить эту книгу?')">
+                    <i class="fas fa-trash-alt"></i> Удалить
+                </button>
+            </form>
+        {% endif %}
+        <a href="{% url 'book_list' %}" class="btn btn-primary">
+            <i class="fas fa-arrow-left"></i> Назад к списку
+        </a>
+    </div>
+</div>
+
+<style>
+    .book-detail-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    .book-title {
+        color: #2c3e50;
+        margin-bottom: 15px;
+    }
+    .book-author, .book-price {
+        font-size: 1.1rem;
+        margin-bottom: 10px;
+    }
+    .book-price {
+        font-weight: bold;
+        color: #e74c3c;
+    }
+    .btn-add-to-cart {
+        padding: 10px 20px;
+        font-size: 1.1rem;
+        margin: 20px 0;
+    }
+    .admin-actions {
+        border-top: 1px solid #eee;
+        padding-top: 20px;
+        margin-top: 30px;
+    }
+</style>
 {% endblock %}
