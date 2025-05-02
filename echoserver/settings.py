@@ -30,8 +30,22 @@ ALLOWED_HOSTS = []
 AUTH_USER_MODEL = 'echo.User'
 LOGIN_URL = 'login'
 
+
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 1209600
+SESSION_COOKIE_NAME = 'bookstore_sessionid'
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_HTTPONLY = True
+SESSION_SAVE_EVERY_REQUEST = True
+
+
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = True
 # Application definition
 
+CAPTCHA_LENGTH = 6
+CAPTCHA_FONT_SIZE = 30
+CAPTCHA_IMAGE_SIZE = (150, 50)
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -40,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'echo',
+    'captcha'
 ]
 
 MIDDLEWARE = [
@@ -107,6 +122,28 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_SSL_REDIRECT = False
+
+SECURE_HSTS_SECONDS = 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]
+PBKDF2_ITERATIONS = 300000
+ARGON2_TIME_COST = 2
+ARGON2_MEMORY_COST = 1024
+ARGON2_PARALLELISM = 2
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 
