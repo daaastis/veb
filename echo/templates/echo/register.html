@@ -1,11 +1,182 @@
 {% extends 'echo/base.html' %}
-
 {% block content %}
-    <h2>Регистрация</h2>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Зарегистрироваться</button>
-    </form>
-    <p>Уже есть аккаунт? <a href="{% url 'login' %}">Войдите</a></p>
+<h2>Регистрация</h2>
+<form id="register-form" method="post">
+    {% csrf_token %}
+
+    <div class="form-group">
+        <label for="id_username"><strong>Username:</strong></label>
+        <input type="text" name="username" id="id_username" required>
+        <div class="helptext">Letters, digits and @/+/-/_ only.</div>
+        <small id="username-error" class="error"></small>
+    </div>
+
+    <div class="form-group">
+        <label for="id_email"><strong>Email:</strong></label>
+        <input type="text" name="email" id="id_email" required>
+        <small id="email-error" class="error"></small>
+    </div>
+
+    <div class="form-group">
+        <label for="id_first_name"><strong>First name:</strong></label>
+        <input type="text" name="first_name" id="id_first_name">
+    </div>
+
+    <div class="form-group">
+        <label for="id_last_name"><strong>Last name:</strong></label>
+        <input type="text" name="last_name" id="id_last_name">
+    </div>
+
+    <hr>
+
+    <div class="form-group">
+        <label for="id_password1"><strong>Password:</strong></label>
+        <input type="password" name="password1" id="id_password1" required>
+        <div class="helptext">
+            <ul>
+                <li>Your password can't be too similar to your other personal information.</li>
+                <li>Your password must contain at least 8 characters.</li>
+                <li>Your password can't be a commonly used password.</li>
+                <li>Your password can't be entirely numeric.</li>
+            </ul>
+        </div>
+        <small id="password-error" class="error"></small>
+    </div>
+
+    <hr>
+
+    <div class="form-group">
+        <label for="id_password2"><strong>Password confirmation:</strong></label>
+        <input type="password" name="password2" id="id_password2" required>
+        <div class="helptext">Enter the same password as before, for verification.</div>
+        <small id="password2-error" class="error"></small>
+    </div>
+
+    <div class="form-group">
+        {{ form.captcha }}
+        <small id="captcha-error" class="error"></small>
+    </div>
+
+    <button type="submit" class="btn btn-primary"><strong>Зарегистрироваться</strong></button>
+
+    <div class="mt-3">Уже есть аккаунт? <a href="{% url 'login' %}"><strong>Войдите</strong></a></div>
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Валидация username
+    const usernameInput = document.getElementById('id_username');
+    usernameInput.addEventListener('blur', function() {
+        const username = this.value.trim();
+        const regex = /^[\w@+-]+$/;
+
+        if (!regex.test(username)) {
+            document.getElementById('username-error').textContent =
+                'Введите только буквы, цифры и @/+/-/_';
+            return;
+        }
+
+        if (username.length < 3) {
+            document.getElementById('username-error').textContent =
+                'Логин должен содержать минимум 3 символа';
+            return;
+        }
+
+        // AJAX проверка уникальности
+        fetch(`/check_username/?username=${encodeURIComponent(username)}`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('username-error').textContent =
+                    data.exists ? 'Этот логин уже занят' : '';
+            });
+    });
+
+
+    // Валидация email
+const emailInput = document.getElementById('id_email');
+emailInput.addEventListener('blur', function() {
+    const email = this.value.trim();
+    const errorElement = document.getElementById('email-error');
+    errorElement.textContent = '';
+
+    // 1. Запрет восклицательных знаков
+    if (email.includes('!')) {
+        errorElement.textContent = 'Email не может содержать восклицательный знак (!)';
+        return;
+    }
+
+    // 2. Проверка основной структуры email
+    const atIndex = email.indexOf('@');
+    if (atIndex === -1 || atIndex === 0 || atIndex === email.length - 1) {
+        errorElement.textContent = 'Email должен содержать @ в середине адреса';
+        return;
+    }
+
+    // 3. Проверка точек
+    const domainPart = email.slice(atIndex + 1);
+    const dotCount = (domainPart.match(/\./g) || []).length;
+
+    if (dotCount === 0) {
+        errorElement.textContent = 'Email должен содержать точку после @';
+        return;
+    }
+
+    if (dotCount > 1) {
+        errorElement.textContent = 'Email может содержать только одну точку после @';
+        return;
+    }
+
+    // 4. Проверка стандартного формата
+    const regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    if (!regex.test(email)) {
+        errorElement.textContent = 'Введите корректный email (пример: user@example.com)';
+        return;
+    }
+
+    // 5. Проверка уникальности email
+    fetch(`/check_email/?email=${encodeURIComponent(email)}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.exists) {
+                errorElement.textContent = 'Этот email уже зарегистрирован';
+            }
+        });
+});
+
+    // Валидация пароля
+    const passwordInput = document.getElementById('id_password1');
+    passwordInput.addEventListener('input', function() {
+        document.getElementById('password-error').textContent =
+            this.value.length < 8 ? 'Пароль должен содержать минимум 8 символов' : '';
+    });
+
+    // Проверка совпадения паролей
+    const password2Input = document.getElementById('id_password2');
+    password2Input.addEventListener('input', function() {
+        document.getElementById('password2-error').textContent =
+            this.value !== passwordInput.value ? 'Пароли не совпадают' : '';
+    });
+});
+</script>
+
+<style>
+.error {
+    color: red;
+    display: block;
+    margin-top: 5px;
+}
+.helptext {
+    font-size: 12px;
+    color: #666;
+    margin: 5px 0;
+}
+.form-group {
+    margin-bottom: 15px;
+}
+hr {
+    margin: 15px 0;
+    border: 0;
+    border-top: 1px solid #eee;
+}
+</style>
 {% endblock %}
