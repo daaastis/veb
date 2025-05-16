@@ -4,35 +4,272 @@
 
 {% block content %}
     <h1>Book List</h1>
+
+    <form method="get" action="">
+    <!-- Фильтры -->
+    <div>
+        <label for="author">Автор:</label>
+        <input type="text" name="author" id="author" value="{{ request.GET.author }}">
+    </div>
+
+    <div>
+        <label for="min_price">Цена от:</label>
+        <input type="number" name="min_price" id="min_price" value="{{ request.GET.min_price }}">
+
+        <label for="max_price">до:</label>
+        <input type="number" name="max_price" id="max_price" value="{{ request.GET.max_price }}">
+    </div>
+
+    <!-- Сортировка  -->
+    <div>
+    <label for="sort_by">Сортировка:</label>
+    <select name="sort_by" id="sort_by" onchange="this.form.submit()">
+        <option value="">По умолчанию</option>
+        <option value="title_asc">Название (A-Z)</option>
+        <option value="title_desc">Название (Z-A)</option>
+        <option value="price_asc">Цена (дешевые)</option>
+        <option value="price_desc">Цена (дорогие)</option>
+    </select>
+</div>
+
+<script>
+    // Устанавливаем выбранное значение из URL при загрузке страницы
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const sortBy = urlParams.get('sort_by');
+        if (sortBy) {
+            document.getElementById('sort_by').value = sortBy;
+        }
+    });
+</script>
+
+    <!-- Кнопки должны быть ВНУТРИ формы -->
+    <button type="submit">Применить</button>
+    <a href="?">Сбросить</a>
+</form>
+
+    <!-- Список книг -->
     <ul>
         {% for book in books %}
             <li>
                 {{ book.title }} by {{ book.author }} - ${{ book.price }}
+                {% if book.year %}({{ book.year }}){% endif %}
                 <a href="{% url 'book_detail' book.pk %}">View</a>
-                {% if user.is_authenticated and user.role == 'admin' %}
+                {% if user.is_authenticated and user.is_superuser %}
                     <a href="{% url 'book_edit' book.pk %}">Edit</a>
                     <a href="{% url 'book_delete' book.pk %}">Delete</a>
                 {% endif %}
             </li>
+        {% empty %}
+            <li>No books found.</li>
         {% endfor %}
     </ul>
 
-    <!-- Пагинация -->
-    <div class="pagination">
-        <span class="step-links">
+    <!-- Пагинация с сохранением фильтров -->
+    {% if books.has_other_pages %}
+        <div class="pagination">
             {% if books.has_previous %}
-                <a href="?page=1">&laquo; первая</a>
-                <a href="?page={{ books.previous_page_number }}">предыдущая</a>
+                <a href="?page=1
+                    {% if request.GET.author %}&author={{ request.GET.author }}{% endif %}
+                    {% if request.GET.year %}&year={{ request.GET.year }}{% endif %}
+                    {% if request.GET.min_price %}&min_price={{ request.GET.min_price }}{% endif %}
+                    {% if request.GET.max_price %}&max_price={{ request.GET.max_price }}{% endif %}
+                    {% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}">
+                    &laquo; First
+                </a>
+                <a href="?page={{ books.previous_page_number }}
+                    {% if request.GET.author %}&author={{ request.GET.author }}{% endif %}
+                    {% if request.GET.year %}&year={{ request.GET.year }}{% endif %}
+                    {% if request.GET.min_price %}&min_price={{ request.GET.min_price }}{% endif %}
+                    {% if request.GET.max_price %}&max_price={{ request.GET.max_price }}{% endif %}
+                    {% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}">
+                    Previous
+                </a>
             {% endif %}
 
-            <span class="current">
-                Страница {{ books.number }} из {{ books.paginator.num_pages }}.
-            </span>
+            <span>Page {{ books.number }} of {{ books.paginator.num_pages }}</span>
 
             {% if books.has_next %}
-                <a href="?page={{ books.next_page_number }}">следующая</a>
-                <a href="?page={{ books.paginator.num_pages }}">последняя &raquo;</a>
+                <a href="?page={{ books.next_page_number }}
+                    {% if request.GET.author %}&author={{ request.GET.author }}{% endif %}
+                    {% if request.GET.year %}&year={{ request.GET.year }}{% endif %}
+                    {% if request.GET.min_price %}&min_price={{ request.GET.min_price }}{% endif %}
+                    {% if request.GET.max_price %}&max_price={{ request.GET.max_price }}{% endif %}
+                    {% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}">
+                    Next
+                </a>
+                <a href="?page={{ books.paginator.num_pages }}
+                    {% if request.GET.author %}&author={{ request.GET.author }}{% endif %}
+                    {% if request.GET.year %}&year={{ request.GET.year }}{% endif %}
+                    {% if request.GET.min_price %}&min_price={{ request.GET.min_price }}{% endif %}
+                    {% if request.GET.max_price %}&max_price={{ request.GET.max_price }}{% endif %}
+                    {% if request.GET.sort_by %}&sort_by={{ request.GET.sort_by }}{% endif %}">
+                    Last &raquo;
+                </a>
             {% endif %}
-        </span>
-    </div>
+        </div>
+    {% endif %}
+{% endblock %}
+{% block extra_css %}
+<style>
+.filters {
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.filter-group label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.filter-group input,
+.filter-group select {
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.price-range {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.price-range input {
+    flex: 1;
+}
+
+.filter-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+}
+
+.apply-btn, .reset-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.apply-btn {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.reset-btn {
+    background-color: #f44336;
+    color: white;
+    text-decoration: none;
+    display: inline-block;
+    text-align: center;
+    line-height: normal;
+}
+
+.book-list {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.book-item {
+    border: 1px solid #ddd;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.book-info h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+.author {
+    color: #666;
+    font-style: italic;
+}
+
+.price {
+    font-weight: bold;
+    color: #2e7d32;
+}
+
+.year {
+    color: #666;
+    font-size: 0.9em;
+}
+
+.book-actions {
+    margin-top: 15px;
+    display: flex;
+    gap: 10px;
+}
+
+.view-btn, .edit-btn, .delete-btn {
+    padding: 5px 10px;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.view-btn {
+    background-color: #2196F3;
+    color: white;
+}
+
+.edit-btn {
+    background-color: #FFC107;
+    color: black;
+}
+
+.delete-btn {
+    background-color: #f44336;
+    color: white;
+}
+
+.pagination {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+}
+
+.pagination a {
+    padding: 5px 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    text-decoration: none;
+    color: #333;
+}
+
+.pagination a:hover {
+    background-color: #eee;
+}
+
+.pagination .current {
+    padding: 5px 10px;
+}
+
+.no-books {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+</style>
 {% endblock %}
